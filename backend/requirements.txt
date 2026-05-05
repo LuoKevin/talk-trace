@@ -4,3 +4,4 @@ python-multipart>=0.0.9
 pydantic>=2.7.0
 datasets>=2.19.0
 soundfile>=0.12.1
+faster-whisper>=1.1.0

@@ -11,7 +11,7 @@ def test_process_meeting_audio_returns_fake_structured_result(tmp_path: Path):
     result = process_meeting_audio(job_id="job-123", audio_path=audio_path)
 
     assert result.job_id == "job-123"
-    assert len(result.transcript) == 3
+    assert len(result.transcript) == 2
     assert result.transcript[0].speaker == "Speaker 1"
     assert result.summary.overview
     assert result.summary.action_items
