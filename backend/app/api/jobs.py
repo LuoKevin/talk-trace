@@ -27,10 +27,16 @@ async def upload_audio(
     stored_path = UPLOAD_DIR / f"{job_id}-{original_name}"
 
     contents = await file.read()
-    if len(contents) > MAX_UPLOAD_BYTES:
+    content_length = len(contents)
+    if content_length > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="Audio file is too large for the MVP upload limit",
+        )
+    elif content_length == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded audio file is empty",
         )
 
     stored_path.write_bytes(contents)

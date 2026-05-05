@@ -71,6 +71,13 @@ export default function App() {
           </div>
           <TranscriptDisplay transcript={result.transcript} />
         </div>
+      ) : job?.status === "failed" ? (
+        <section className="failed-state">
+          <p>
+            {"Processing failed. No result was generated."}
+            {job.error ? ` Error details: ${job.error}` : null}
+          </p>
+        </section>
       ) : (
         <section className="empty-state">
           <p>

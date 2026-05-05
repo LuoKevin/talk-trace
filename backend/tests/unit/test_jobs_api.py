@@ -70,3 +70,17 @@ def test_upload_rejects_files_over_mvp_size_limit(isolated_storage, monkeypatch)
 
     assert response.status_code == 413
     assert response.json()["detail"] == "Audio file is too large for the MVP upload limit"
+
+def test_upload_rejects_empty_files(isolated_storage, monkeypatch):
+    from app.api import jobs
+
+    monkeypatch.setattr(jobs, "MAX_UPLOAD_BYTES", 10)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/jobs/upload",
+        files={"file": ("meeting.wav", b"", "audio/wav")},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Uploaded audio file is empty"
