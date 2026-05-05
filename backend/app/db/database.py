@@ -27,10 +27,39 @@ def init_db() -> None:
                 filename TEXT NOT NULL,
                 audio_path TEXT NOT NULL,
                 status TEXT NOT NULL,
+                stage TEXT NOT NULL DEFAULT 'uploaded',
+                progress_percent INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 error TEXT,
                 result_json TEXT
             )
             """
+        )
+        _ensure_column(
+            connection,
+            table_name="jobs",
+            column_name="stage",
+            definition="TEXT NOT NULL DEFAULT 'uploaded'",
+        )
+        _ensure_column(
+            connection,
+            table_name="jobs",
+            column_name="progress_percent",
+            definition="INTEGER NOT NULL DEFAULT 0",
+        )
+
+
+def _ensure_column(
+    connection: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    definition: str,
+) -> None:
+    existing_columns = {
+        row["name"] for row in connection.execute(f"PRAGMA table_info({table_name})")
+    }
+    if column_name not in existing_columns:
+        connection.execute(
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}"
         )

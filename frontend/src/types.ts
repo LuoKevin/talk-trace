@@ -1,9 +1,21 @@
 export type JobStatus = "queued" | "processing" | "completed" | "failed";
 
+export type PipelineStage =
+  | "uploaded"
+  | "preprocessing"
+  | "transcription"
+  | "diarization"
+  | "alignment"
+  | "summarization"
+  | "completed"
+  | "failed";
+
 export type JobMetadata = {
   id: string;
   filename: string;
   status: JobStatus;
+  stage: PipelineStage;
+  progress_percent: number;
   created_at: string;
   updated_at: string;
   error: string | null;

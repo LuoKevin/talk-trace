@@ -140,6 +140,26 @@ button:disabled {
   padding: 0.25rem 0.6rem;
 }
 
+.progress-track {
+  background: #e4e8ee;
+  border-radius: 999px;
+  height: 10px;
+  margin: 0.2rem 0 0.35rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-fill {
+  background: #176b87;
+  height: 100%;
+  transition: width 160ms ease;
+}
+
+.progress-label {
+  color: #677487;
+  font-size: 0.85rem;
+}
+
 .status-queued {
   background: #eef0f4;
   color: #3c4654;

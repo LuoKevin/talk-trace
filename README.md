@@ -1,6 +1,6 @@
 # TalkTrace
 
-TalkTrace is a portfolio-quality AI meeting intelligence project. The goal is to learn how an AI pipeline works end to end: upload audio, create a background job, process the file through separate AI stages, and display structured meeting intelligence in a React UI.
+TalkTrace is an AI meeting intelligence project. The goal is to learn how an AI pipeline works end to end: upload audio, create a background job, process the file through separate AI stages, and display structured meeting intelligence in a React UI.
 
 This scaffold intentionally uses fake AI outputs. The important part for Phase 1 is the shape of the system: API routes, persistence, service boundaries, job status, and frontend polling.
 
@@ -70,6 +70,24 @@ Useful endpoints:
 - `GET /api/jobs/{job_id}`
 - `GET /api/jobs/{job_id}/result`
 
+## Run Backend Tests
+
+From the repo root:
+
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest
+```
+
+The default suite mocks Hugging Face dataset loading so unit tests do not
+depend on network access. To run the optional AMI dataset integration test:
+
+```bash
+RUN_HF_TESTS=1 pytest -m integration
+```
+
 ## Run The Frontend
 
 From the repo root:
@@ -95,6 +113,8 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 - Understand the request flow from React to FastAPI.
 - Confirm jobs are created, persisted, processed, and displayed.
 - Add validation for file size and file type.
+- Track coarse pipeline progress: preprocessing, transcription, diarization, alignment, summarization, completed.
+- Keep tests fast by mocking external dataset access by default.
 
 ### Phase 2: Real Transcription
 

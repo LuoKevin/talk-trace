@@ -73,7 +73,11 @@ export default function App() {
         </div>
       ) : (
         <section className="empty-state">
-          <p>Results will appear after the fake pipeline completes.</p>
+          <p>
+            {job
+              ? `Results will appear after ${job.stage} finishes.`
+              : "Results will appear after the fake pipeline completes."}
+          </p>
         </section>
       )}
     </main>

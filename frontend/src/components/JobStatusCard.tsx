@@ -18,6 +18,18 @@ export function JobStatusCard({ job }: JobStatusCardProps) {
           <dd>
             <span className={`status-pill status-${job.status}`}>{job.status}</span>
           </dd>
+          <dt>Stage</dt>
+          <dd>{formatStage(job.stage)}</dd>
+          <dt>Progress</dt>
+          <dd>
+            <div className="progress-track" aria-label="Job progress">
+              <div
+                className="progress-fill"
+                style={{ width: `${job.progress_percent}%` }}
+              />
+            </div>
+            <span className="progress-label">{job.progress_percent}%</span>
+          </dd>
           {job.error ? (
             <>
               <dt>Error</dt>
@@ -30,4 +42,11 @@ export function JobStatusCard({ job }: JobStatusCardProps) {
       )}
     </section>
   );
+}
+
+function formatStage(stage: string): string {
+  return stage
+    .split("_")
+    .join(" ")
+    .replace(/^\w/, (letter) => letter.toUpperCase());
 }

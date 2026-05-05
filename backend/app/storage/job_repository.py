@@ -3,7 +3,7 @@ import json
 import sqlite3
 
 from app.db.database import get_connection
-from app.schemas import JobMetadata, JobResult, JobStatus
+from app.schemas import JobMetadata, JobResult, JobStatus, PipelineStage
 
 
 def _now_iso() -> str:
@@ -15,6 +15,8 @@ def _row_to_metadata(row: sqlite3.Row) -> JobMetadata:
         id=row["id"],
         filename=row["filename"],
         status=row["status"],
+        stage=row["stage"],
+        progress_percent=row["progress_percent"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
         error=row["error"],
@@ -27,11 +29,21 @@ def create_job(job_id: str, filename: str, audio_path: str) -> JobMetadata:
         connection.execute(
             """
             INSERT INTO jobs (
-                id, filename, audio_path, status, created_at, updated_at
+                id, filename, audio_path, status, stage, progress_percent,
+                created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (job_id, filename, audio_path, JobStatus.QUEUED.value, now, now),
+            (
+                job_id,
+                filename,
+                audio_path,
+                JobStatus.QUEUED.value,
+                PipelineStage.UPLOADED.value,
+                0,
+                now,
+                now,
+            ),
         )
     job = get_job(job_id)
     if job is None:
@@ -60,16 +72,35 @@ def get_audio_path(job_id: str) -> str | None:
 def update_status(
     job_id: str,
     status: JobStatus,
+    stage: PipelineStage | None = None,
+    progress_percent: int | None = None,
     error: str | None = None,
 ) -> None:
+    current = get_job(job_id)
+    next_stage = stage or (current.stage if current else PipelineStage.UPLOADED)
+    next_progress = (
+        progress_percent
+        if progress_percent is not None
+        else current.progress_percent
+        if current
+        else 0
+    )
+
     with get_connection() as connection:
         connection.execute(
             """
             UPDATE jobs
-            SET status = ?, error = ?, updated_at = ?
+            SET status = ?, stage = ?, progress_percent = ?, error = ?, updated_at = ?
             WHERE id = ?
             """,
-            (status.value, error, _now_iso(), job_id),
+            (
+                status.value,
+                next_stage.value,
+                next_progress,
+                error,
+                _now_iso(),
+                job_id,
+            ),
         )
 
 
@@ -78,11 +109,14 @@ def save_result(job_id: str, result: JobResult) -> None:
         connection.execute(
             """
             UPDATE jobs
-            SET status = ?, result_json = ?, updated_at = ?, error = NULL
+            SET status = ?, stage = ?, progress_percent = ?, result_json = ?,
+                updated_at = ?, error = NULL
             WHERE id = ?
             """,
             (
                 JobStatus.COMPLETED.value,
+                PipelineStage.COMPLETED.value,
+                100,
                 result.model_dump_json(),
                 _now_iso(),
                 job_id,

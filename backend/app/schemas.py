@@ -10,10 +10,23 @@ class JobStatus(str, Enum):
     FAILED = "failed"
 
 
+class PipelineStage(str, Enum):
+    UPLOADED = "uploaded"
+    PREPROCESSING = "preprocessing"
+    TRANSCRIPTION = "transcription"
+    DIARIZATION = "diarization"
+    ALIGNMENT = "alignment"
+    SUMMARIZATION = "summarization"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class JobMetadata(BaseModel):
     id: str
     filename: str
     status: JobStatus
+    stage: PipelineStage
+    progress_percent: int
     created_at: str
     updated_at: str
     error: str | None = None
