@@ -1,6 +1,6 @@
 from app.services.alignment_service import align_transcript_to_speakers
-from app.services.diarization_service import SpeakerTurn
 from app.models.transcription import RawTranscript, RawTranscriptSegment
+from app.models.diarization import Diarization, SpeakerTurn
 
 
 def test_align_transcript_to_speakers_chooses_largest_overlap():
@@ -15,7 +15,9 @@ def test_align_transcript_to_speakers_chooses_largest_overlap():
         SpeakerTurn(speaker="Speaker 2", start_seconds=4.0, end_seconds=9.0),
     ]
 
-    aligned = align_transcript_to_speakers(transcript, speaker_turns)
+    diarization = Diarization(speaker_turns=speaker_turns)
+
+    aligned = align_transcript_to_speakers(transcript, diarization)
 
     assert [segment.speaker for segment in aligned] == ["Speaker 1", "Speaker 2"]
     assert [segment.text for segment in aligned] == ["First point", "Second point"]
@@ -32,6 +34,6 @@ def test_align_transcript_to_speakers_marks_unknown_when_no_turns_exist():
         ]
     )
 
-    aligned = align_transcript_to_speakers(transcript, speaker_turns=[])
+    aligned = align_transcript_to_speakers(transcript, diarization=Diarization(speaker_turns=[]))
 
     assert aligned[0].speaker == "Unknown Speaker"

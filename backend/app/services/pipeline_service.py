@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
+from app.models.transcription import RawTranscript
 from app.schemas import JobResult, PipelineStage
 from app.services.alignment_service import align_transcript_to_speakers
 from app.services.audio_service import normalize_audio
@@ -10,12 +11,14 @@ from app.services.transcription_service import transcribe_audio
 
 
 ProgressCallback = Callable[[PipelineStage, int], None]
+RawTranscriptCallback = Callable[[RawTranscript], None]
 
 
 def process_meeting_audio(
     job_id: str,
     audio_path: Path,
     progress_callback: ProgressCallback | None = None,
+    raw_transcript_callback: RawTranscriptCallback | None = None,
 ) -> JobResult:
     """Run the TalkTrace pipeline for one uploaded meeting.
 
@@ -33,14 +36,16 @@ def process_meeting_audio(
 
     _report_progress(progress_callback, PipelineStage.TRANSCRIPTION, 35)
     raw_transcript = transcribe_audio(normalized_audio_path)
+    if raw_transcript_callback is not None:
+        raw_transcript_callback(raw_transcript)
 
     _report_progress(progress_callback, PipelineStage.DIARIZATION, 55)
-    speaker_turns = diarize_audio(normalized_audio_path)
+    diarization = diarize_audio(normalized_audio_path)
 
     _report_progress(progress_callback, PipelineStage.ALIGNMENT, 75)
     speaker_transcript = align_transcript_to_speakers(
         transcript=raw_transcript,
-        speaker_turns=speaker_turns,
+        diarization=diarization,
     )
 
     _report_progress(progress_callback, PipelineStage.SUMMARIZATION, 90)

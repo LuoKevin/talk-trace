@@ -38,6 +38,10 @@ def run_job(job_id: str) -> None:
                 stage=stage,
                 progress_percent=progress,
             ),
+            raw_transcript_callback=lambda transcript: job_repository.save_raw_transcript(
+                job_id,
+                transcript,
+            ),
         )
         job_repository.save_result(job_id, result)
     except Exception as exc:

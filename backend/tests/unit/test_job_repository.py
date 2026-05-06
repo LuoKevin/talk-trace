@@ -6,6 +6,7 @@ from app.schemas import (
     TranscriptSegment,
 )
 from app.storage import job_repository
+from app.models.transcription import RawTranscript, RawTranscriptSegment
 
 
 def test_job_repository_persists_metadata_and_result(isolated_storage):
@@ -31,6 +32,18 @@ def test_job_repository_persists_metadata_and_result(isolated_storage):
     assert processing.status == JobStatus.PROCESSING
     assert processing.stage == PipelineStage.TRANSCRIPTION
     assert processing.progress_percent == 35
+
+    raw_transcript = RawTranscript(
+        segments=[
+            RawTranscriptSegment(
+                start_seconds=0.0,
+                end_seconds=1.0,
+                text="Hello",
+            )
+        ]
+    )
+    job_repository.save_raw_transcript("job-abc", raw_transcript)
+    assert job_repository.get_raw_transcript("job-abc") == raw_transcript
 
     result = JobResult(
         job_id="job-abc",

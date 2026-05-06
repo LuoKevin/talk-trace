@@ -32,6 +32,7 @@ def init_db() -> None:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 error TEXT,
+                raw_transcript_json TEXT,
                 result_json TEXT
             )
             """
@@ -47,6 +48,12 @@ def init_db() -> None:
             table_name="jobs",
             column_name="progress_percent",
             definition="INTEGER NOT NULL DEFAULT 0",
+        )
+        _ensure_column(
+            connection,
+            table_name="jobs",
+            column_name="raw_transcript_json",
+            definition="TEXT",
         )
 
 

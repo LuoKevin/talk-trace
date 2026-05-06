@@ -1,11 +1,11 @@
 from app.schemas import TranscriptSegment
-from app.services.diarization_service import SpeakerTurn
 from app.models.transcription import RawTranscript
+from app.models.diarization import Diarization
 
 
 def align_transcript_to_speakers(
     transcript: RawTranscript,
-    speaker_turns: list[SpeakerTurn],
+    diarization: Diarization,
 ) -> list[TranscriptSegment]:
     """Attach speaker labels to transcript segments.
 
@@ -18,7 +18,7 @@ def align_transcript_to_speakers(
 
     for segment in transcript.segments:
         best_turn = max(
-            speaker_turns,
+            diarization.speaker_turns,
             key=lambda turn: _overlap_seconds(
                 segment.start_seconds,
                 segment.end_seconds,

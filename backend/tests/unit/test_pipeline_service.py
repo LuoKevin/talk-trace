@@ -39,3 +39,18 @@ def test_process_meeting_audio_reports_stage_progress(tmp_path: Path):
         (PipelineStage.ALIGNMENT, 75),
         (PipelineStage.SUMMARIZATION, 90),
     ]
+
+
+def test_process_meeting_audio_reports_raw_transcript(tmp_path: Path):
+    audio_path = tmp_path / "meeting.wav"
+    audio_path.write_bytes(b"fake audio")
+    raw_transcripts = []
+
+    process_meeting_audio(
+        job_id="job-123",
+        audio_path=audio_path,
+        raw_transcript_callback=raw_transcripts.append,
+    )
+
+    assert len(raw_transcripts) == 1
+    assert raw_transcripts[0].segments

@@ -35,6 +35,8 @@ Questions you should be able to answer:
 - How does audio length affect runtime?
 - What model output should be persisted for debugging?
 
+NOTE: Labels are still faked until Phase 3
+
 ## Phase 3: Speaker Diarization
 
 Implementation tasks:

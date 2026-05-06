@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.storage import job_repository
 
 
 def test_upload_status_and_result_endpoints(isolated_storage):
@@ -23,6 +24,10 @@ def test_upload_status_and_result_endpoints(isolated_storage):
     result_response = client.get(f"/api/jobs/{job_id}/result")
     assert result_response.status_code == 200
     assert result_response.json()["transcript"][0]["speaker"] == "Speaker 1"
+
+    raw_transcript = job_repository.get_raw_transcript(job_id)
+    assert raw_transcript is not None
+    assert raw_transcript.segments
 
 
 def test_missing_job_returns_404(isolated_storage):
