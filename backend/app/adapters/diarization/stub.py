@@ -1,10 +1,11 @@
 from app.models.diarization import Diarization, SpeakerTurn
+from app.adapters.diarization.base import DiarizationAdapter
 
 
-class StubDiarizationAdapter:
+class StubDiarizationAdapter(DiarizationAdapter):
     def load_model(self):
         """No model to load for the stub adapter."""
-        pass
+        return None
 
     def diarize(self, audio_path: str) -> Diarization:
         """Return a hardcoded list of speaker turns for testing purposes."""

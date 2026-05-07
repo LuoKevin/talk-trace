@@ -6,6 +6,9 @@ from app.models.diarization import Diarization
 
 
 class DiarizationAdapter:    
+    def __init__(self):
+        self.model = self.load_model()
+
     def load_model(self):
         """Load the diarization model into memory."""
         raise NotImplementedError("This method should be implemented by subclasses.")
