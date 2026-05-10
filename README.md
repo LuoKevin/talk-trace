@@ -66,6 +66,8 @@ uvicorn app.main:app --reload
 
 The API will run at `http://localhost:8000`.
 
+The backend logs job lifecycle events, selected adapters, and pipeline stage boundaries to stdout.
+
 Useful endpoints:
 
 - `GET /health`
