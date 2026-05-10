@@ -12,7 +12,7 @@ audio upload
   -> UI display
 ```
 
-Each stage has a separate service module. That separation is the main learning goal of the scaffold.
+Each stage has a separate service module. Model-specific implementations live behind adapters, so the pipeline can call stable service functions without knowing which model or provider is active.
 
 ## Pipeline Stages
 
@@ -48,6 +48,13 @@ Example output:
 
 Transcription does not reliably answer who spoke. It answers what was said and when it was said.
 
+TalkTrace currently supports:
+
+- stub transcription for tests and local development
+- faster-whisper transcription for real local speech-to-text
+
+The raw transcript is stored before alignment so transcription output can be debugged independently from diarization and summarization.
+
 ### 4. Diarization
 
 Diarization detects speaker turns.
@@ -63,6 +70,11 @@ Example output:
 ```
 
 Diarization does not produce transcript text. It answers who spoke and when they spoke.
+
+TalkTrace currently supports:
+
+- a single-speaker stub adapter for Phase 2 transcription testing
+- a pyannote adapter skeleton for Phase 3
 
 ### 5. Alignment
 
@@ -96,6 +108,8 @@ Later, `backend/app/jobs/job_runner.py` can become a Celery or RQ task body. The
 ## Storage Boundary
 
 SQLite code is isolated in `backend/app/storage/job_repository.py`. API routes should not contain SQL. This keeps the code structured so a Postgres-backed repository can be added later without rewriting the rest of the app.
+
+Current persisted fields include job metadata, progress, upload path, raw transcript JSON, and final result JSON.
 
 For a stronger version, split storage into:
 

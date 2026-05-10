@@ -2,7 +2,7 @@
 
 TalkTrace is an AI meeting intelligence project. The goal is to learn how an AI pipeline works end to end: upload audio, create a background job, process the file through separate AI stages, and display structured meeting intelligence in a React UI.
 
-This scaffold intentionally uses fake AI outputs. The important part for Phase 1 is the shape of the system: API routes, persistence, service boundaries, job status, and frontend polling.
+The project started with fake AI outputs, but now has adapter boundaries for real transcription and diarization. Stub adapters remain the default so local development and tests stay fast.
 
 ## MVP Scope
 
@@ -20,8 +20,8 @@ Not included yet:
 - Docker
 - Auth
 - Real-time streaming
-- Real WhisperX, pyannote, or OpenAI calls
 - Production background workers
+- Production-grade diarization and summarization
 
 ## Architecture
 
@@ -32,22 +32,25 @@ frontend/
 backend/
   FastAPI API
   SQLite persistence
-  Service-layer pipeline placeholders
+  Service-layer AI pipeline
+  Adapter layer for transcription and diarization
 
 docs/
   Architecture notes and learning roadmap
 ```
 
-The backend pipeline is deliberately split into small service modules:
+The backend pipeline is deliberately split into small service modules and adapter packages:
 
 - `audio_service.py`: audio normalization and format preparation
-- `transcription_service.py`: speech-to-text placeholder
-- `diarization_service.py`: speaker diarization placeholder
+- `transcription_service.py`: chooses a transcription adapter
+- `diarization_service.py`: chooses a diarization adapter
 - `alignment_service.py`: speaker/transcript alignment placeholder
 - `summarization_service.py`: structured summary placeholder
 - `pipeline_service.py`: orchestrates the pipeline
+- `adapters/transcription/`: stub and faster-whisper adapters
+- `adapters/diarization/`: stub and pyannote adapters
 
-This keeps the future WhisperX, pyannote, and LLM code from leaking into API routes.
+This keeps model-specific code from leaking into API routes or pipeline orchestration.
 
 ## Run The Backend
 
@@ -69,6 +72,51 @@ Useful endpoints:
 - `POST /api/jobs/upload`
 - `GET /api/jobs/{job_id}`
 - `GET /api/jobs/{job_id}/result`
+
+## Adapter Configuration
+
+Stub adapters are the defaults. They make the full upload flow work without downloading models.
+
+```bash
+TALKTRACE_TRANSCRIPTION_ADAPTER=stub
+TALKTRACE_DIARIZATION_ADAPTER=stub
+```
+
+To use faster-whisper for real transcription:
+
+```bash
+TALKTRACE_TRANSCRIPTION_ADAPTER=faster_whisper uvicorn app.main:app --reload
+```
+
+The faster-whisper adapter currently defaults to:
+
+```bash
+TALKTRACE_TRANSCRIPTION_MODEL=base
+TALKTRACE_TRANSCRIPTION_DEVICE=cpu
+TALKTRACE_TRANSCRIPTION_COMPUTE_TYPE=int8
+```
+
+To use pyannote for diarization:
+
+```bash
+HUGGINGFACE_TOKEN=your_token \
+TALKTRACE_DIARIZATION_ADAPTER=pyannote \
+TALKTRACE_PYANNOTE_MODEL=pyannote/speaker-diarization-3.1 \
+uvicorn app.main:app --reload
+```
+
+You may need to accept the model terms on Hugging Face before pyannote can download the model.
+
+## Stored Artifacts
+
+SQLite stores:
+
+- job metadata and progress
+- uploaded audio path
+- raw transcript JSON before alignment
+- final result JSON after alignment and summarization
+
+This is intentionally simple for the MVP. Later phases can split transcript segments, speaker turns, summaries, and evaluation results into separate tables.
 
 ## Run Backend Tests
 
@@ -110,23 +158,17 @@ VITE_API_BASE_URL=http://localhost:8000 npm run dev
 
 ### Phase 1: Upload + Fake Pipeline
 
-- Understand the request flow from React to FastAPI.
-- Confirm jobs are created, persisted, processed, and displayed.
-- Add validation for file size and file type.
-- Track coarse pipeline progress: preprocessing, transcription, diarization, alignment, summarization, completed.
-- Keep tests fast by mocking external dataset access by default.
+- Complete: upload, validation, job metadata, progress tracking, fake pipeline, polling UI, failed-state UI, and backend tests.
 
 ### Phase 2: Real Transcription
 
-- Integrate a real transcription backend in `transcription_service.py`.
-- Save raw transcript segments with timestamps.
-- Add tests around transcript parsing and failure handling.
+- Mostly complete: faster-whisper adapter, stub default, adapter selection, mocked tests, and raw transcript persistence.
+- Manual signoff: upload a short audio file with `TALKTRACE_TRANSCRIPTION_ADAPTER=faster_whisper` and inspect `raw_transcript_json`.
 
 ### Phase 3: Speaker Diarization
 
-- Integrate pyannote or a similar diarization model in `diarization_service.py`.
-- Store speaker turns independently from transcript text.
-- Learn how model output changes based on audio quality.
+- In progress: pyannote adapter skeleton and mocked conversion test exist.
+- Next: manually run pyannote on a short multi-speaker clip and then persist raw diarization output.
 
 ### Phase 4: Speaker-Aware Summaries
 

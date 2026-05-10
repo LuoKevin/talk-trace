@@ -6,11 +6,11 @@ Use this roadmap as a sequence of checkpoints. Do not rush to model integrations
 
 Implementation tasks:
 
-- Add file type and file size validation in `backend/app/api/jobs.py`.
-- Add per-stage progress fields to job metadata.
-- Add a frontend loading state that distinguishes queued, processing, completed, and failed.
-- Write one backend test for creating a job.
-- Write one frontend test or manual checklist for upload and polling.
+- Completed: add file type, empty-file, file size, and content-type validation in `backend/app/api/jobs.py`.
+- Completed: add per-stage progress fields to job metadata.
+- Completed: add frontend states for queued, processing, completed, and failed.
+- Completed: write backend tests for repository, upload flow, pipeline, and adapter selection.
+- Remaining optional task: write a manual QA checklist for upload and polling.
 
 Questions you should be able to answer:
 
@@ -23,10 +23,13 @@ Questions you should be able to answer:
 
 Implementation tasks:
 
-- Replace the fake output in `transcription_service.py` with a real transcription adapter.
-- Save raw transcript output before alignment.
+- Completed: add transcription adapters under `backend/app/adapters/transcription`.
+- Completed: keep stub transcription as the default adapter.
+- Completed: add faster-whisper adapter and mocked conversion tests.
+- Completed: save raw transcript output before alignment.
 - Add sample audio files for local testing.
 - Add error handling for unsupported audio or model failures.
+- Manual signoff: run with `TALKTRACE_TRANSCRIPTION_ADAPTER=faster_whisper` and upload a real short audio file.
 
 Questions you should be able to answer:
 
@@ -35,13 +38,19 @@ Questions you should be able to answer:
 - How does audio length affect runtime?
 - What model output should be persisted for debugging?
 
-NOTE: Labels are still faked until Phase 3
+Notes:
+
+- faster-whisper returns text and timestamps, not speaker identities.
+- Speaker labels are still produced by the diarization stage.
+- During Phase 2, the diarization stub should stay single-speaker so transcription testing is not confused by fake extra speakers.
 
 ## Phase 3: Speaker Diarization
 
 Implementation tasks:
 
-- Replace fake speaker turns in `diarization_service.py`.
+- Started: add diarization adapters under `backend/app/adapters/diarization`.
+- Started: add pyannote adapter skeleton and mocked output conversion tests.
+- Replace fake speaker turns in `diarization_service.py` with real pyannote output.
 - Persist speaker turns separately from transcript text.
 - Add a way to configure expected speaker count when known.
 - Test the pipeline on overlapping speech and poor audio.
@@ -52,6 +61,19 @@ Questions you should be able to answer:
 - Why can diarization be wrong even when transcription is right?
 - How do speaker turns line up with transcript segments?
 - What should happen when speaker count is unknown?
+
+Manual pyannote setup:
+
+```bash
+cd backend
+source .venv/bin/activate
+HUGGINGFACE_TOKEN=your_token \
+TALKTRACE_DIARIZATION_ADAPTER=pyannote \
+TALKTRACE_PYANNOTE_MODEL=pyannote/speaker-diarization-3.1 \
+uvicorn app.main:app --reload
+```
+
+Before running this, accept the selected pyannote model terms on Hugging Face.
 
 ## Phase 4: Speaker-Aware Summaries
 
