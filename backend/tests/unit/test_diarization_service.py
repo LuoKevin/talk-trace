@@ -53,6 +53,11 @@ class FakeAnnotation:
         )
 
 
+class FakeDiarizeOutput:
+    def __init__(self):
+        self.exclusive_speaker_diarization = FakeAnnotation()
+
+
 class FakePyannotePipeline:
     def __init__(self):
         self.device = None
@@ -62,9 +67,9 @@ class FakePyannotePipeline:
         self.device = device
         return self
 
-    def __call__(self, audio_path: str, hook=None):
-        self.calls.append((audio_path, hook))
-        return FakeAnnotation()
+    def __call__(self, audio, hook=None):
+        self.calls.append((audio, hook))
+        return FakeDiarizeOutput()
 
 
 class FakeTorch:
@@ -106,6 +111,11 @@ def test_pyannote_adapter_converts_output_to_diarization(
         ),
     )
     monkeypatch.setattr(pyannote, "_get_progress_hook_class", lambda: FakeProgressHook)
+    monkeypatch.setattr(
+        pyannote,
+        "_load_audio_for_pyannote",
+        lambda path: {"waveform": "fake-waveform", "sample_rate": 16000},
+    )
 
     audio_path = tmp_path / "meeting.wav"
     audio_path.write_bytes(b"fake audio")
@@ -116,7 +126,10 @@ def test_pyannote_adapter_converts_output_to_diarization(
         "model_name": "fake-pyannote-model",
         "token": "fake-token",
     }
-    assert fake_pipeline.calls[0][0] == str(audio_path)
+    assert fake_pipeline.calls[0][0] == {
+        "waveform": "fake-waveform",
+        "sample_rate": 16000,
+    }
     assert len(diarization.speaker_turns) == 2
     assert diarization.speaker_turns[0].speaker == "SPEAKER_00"
     assert diarization.speaker_turns[0].start_seconds == 0.0
