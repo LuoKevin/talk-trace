@@ -1,12 +1,9 @@
 from pathlib import Path
 
 from app.adapters.transcription.base import TranscriptionAdapter
+from app.config import get_settings
 from app.models.transcription import RawTranscript, RawTranscriptSegment
 from faster_whisper import WhisperModel
-
-MODEL_SIZE = "base"
-DEVICE = "cpu"
-COMPUTE_TYPE = "int8"
 
 
 class FasterWhisperAdapter(TranscriptionAdapter):
@@ -15,7 +12,12 @@ class FasterWhisperAdapter(TranscriptionAdapter):
 
     def load_model(self):
         """Load the transcription model into memory."""
-        return WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
+        settings = get_settings()
+        return WhisperModel(
+            settings.transcription_model,
+            device=settings.transcription_device,
+            compute_type=settings.transcription_compute_type,
+        )
 
     def transcribe(self, audio_path: Path) -> RawTranscript:
         """Transcribe the given audio file and return a RawTranscript object."""

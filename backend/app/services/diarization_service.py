@@ -1,7 +1,8 @@
-import os
 from pathlib import Path
 
+from app.config import get_settings
 from app.models.diarization import Diarization
+
 
 def diarize_audio(audio_path: Path) -> Diarization:
     """Detect who spoke when.
@@ -12,7 +13,7 @@ def diarize_audio(audio_path: Path) -> Diarization:
     """
     # TODO: Integrate pyannote or another diarization system here.
     # TODO: Learn how to handle overlapping speech and unknown speaker counts.
-    adapter_type = os.getenv("TALKTRACE_DIARIZATION_ADAPTER", "stub")
+    adapter_type = get_settings().diarization_adapter
     if adapter_type == "pyannote":
         from app.adapters.diarization.pyannote import PyannoteDiarizationAdapter
         adapter = PyannoteDiarizationAdapter()

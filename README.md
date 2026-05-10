@@ -75,6 +75,8 @@ Useful endpoints:
 
 ## Adapter Configuration
 
+Runtime settings are centralized in `backend/app/config.py`.
+
 Stub adapters are the defaults. They make the full upload flow work without downloading models.
 
 ```bash
@@ -102,6 +104,7 @@ To use pyannote for diarization:
 HUGGINGFACE_TOKEN=your_token \
 TALKTRACE_DIARIZATION_ADAPTER=pyannote \
 TALKTRACE_PYANNOTE_MODEL=pyannote/speaker-diarization-3.1 \
+TALKTRACE_PYANNOTE_DEVICE=cpu \
 uvicorn app.main:app --reload
 ```
 

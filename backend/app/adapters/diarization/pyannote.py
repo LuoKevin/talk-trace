@@ -1,22 +1,21 @@
-import os
 from pathlib import Path
 
 from app.adapters.diarization.base import DiarizationAdapter
+from app.config import get_settings
 from app.models.diarization import Diarization, SpeakerTurn
 
 
 class PyannoteDiarizationAdapter(DiarizationAdapter):
     def load_model(self):
-        model_name = os.getenv(
-            "TALKTRACE_PYANNOTE_MODEL",
-            "pyannote/speaker-diarization-3.1",
-        )
-        token = os.getenv("HUGGINGFACE_TOKEN")
+        settings = get_settings()
         torch = _get_torch()
         pipeline_cls = _get_pipeline_class()
 
-        pipeline = pipeline_cls.from_pretrained(model_name, token=token)
-        pipeline.to(torch.device("cpu"))
+        pipeline = pipeline_cls.from_pretrained(
+            settings.pyannote_model,
+            token=settings.huggingface_token,
+        )
+        pipeline.to(torch.device(settings.pyannote_device))
         return pipeline
 
     def diarize(self, audio_path: Path) -> Diarization:

@@ -1,5 +1,6 @@
-import os
 from pathlib import Path
+
+from app.config import get_settings
 from app.models.transcription import RawTranscript
 
 
@@ -12,7 +13,7 @@ def transcribe_audio(audio_path: Path) -> RawTranscript:
     # TODO: Integrate WhisperX or another transcription engine here.
     # TODO: Decide what metadata you need to keep from the model output.
 
-    adapter_type = os.getenv("TALKTRACE_TRANSCRIPTION_ADAPTER", "stub")
+    adapter_type = get_settings().transcription_adapter
     if adapter_type == "faster_whisper":
         from app.adapters.transcription.faster_whisper import FasterWhisperAdapter
         adapter = FasterWhisperAdapter()

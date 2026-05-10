@@ -70,6 +70,7 @@ source .venv/bin/activate
 HUGGINGFACE_TOKEN=your_token \
 TALKTRACE_DIARIZATION_ADAPTER=pyannote \
 TALKTRACE_PYANNOTE_MODEL=pyannote/speaker-diarization-3.1 \
+TALKTRACE_PYANNOTE_DEVICE=cpu \
 uvicorn app.main:app --reload
 ```
 
