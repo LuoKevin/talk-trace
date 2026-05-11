@@ -52,6 +52,10 @@ def run_job(job_id: str) -> None:
                 job_id,
                 diarization,
             ),
+            aligned_transcript_callback=lambda transcript: job_repository.save_aligned_transcript(
+                job_id,
+                transcript,
+            ),
         )
         job_repository.save_result(job_id, result)
         logger.info("job_completed job_id=%s", job_id)

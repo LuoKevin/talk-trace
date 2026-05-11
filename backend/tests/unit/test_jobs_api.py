@@ -33,6 +33,10 @@ def test_upload_status_and_result_endpoints(isolated_storage):
     assert raw_diarization is not None
     assert raw_diarization.speaker_turns
 
+    aligned_transcript = job_repository.get_aligned_transcript(job_id)
+    assert aligned_transcript is not None
+    assert aligned_transcript.segments
+
 
 def test_missing_job_returns_404(isolated_storage):
     client = TestClient(app)

@@ -69,3 +69,19 @@ def test_process_meeting_audio_reports_raw_diarization(tmp_path: Path):
 
     assert len(raw_diarizations) == 1
     assert raw_diarizations[0].speaker_turns
+
+
+def test_process_meeting_audio_reports_aligned_transcript(tmp_path: Path):
+    audio_path = tmp_path / "meeting.wav"
+    audio_path.write_bytes(b"fake audio")
+    aligned_transcripts = []
+
+    process_meeting_audio(
+        job_id="job-123",
+        audio_path=audio_path,
+        aligned_transcript_callback=aligned_transcripts.append,
+    )
+
+    assert len(aligned_transcripts) == 1
+    assert aligned_transcripts[0].segments
+    assert aligned_transcripts[0].segments[0].speaker == "Speaker 1"

@@ -2,6 +2,8 @@ import logging
 from pathlib import Path
 from typing import Callable
 
+from app.models.alignment import AlignedTranscript
+from app.models.diarization import Diarization
 from app.models.transcription import RawTranscript
 from app.schemas import JobResult, PipelineStage, TranscriptSegment
 from app.services.alignment_service import align_transcript_to_speakers
@@ -9,12 +11,12 @@ from app.services.audio_service import normalize_audio
 from app.services.diarization_service import diarize_audio
 from app.services.summarization_service import summarize_meeting
 from app.services.transcription_service import transcribe_audio
-from app.models.diarization import Diarization
 
 
 ProgressCallback = Callable[[PipelineStage, int], None]
 RawTranscriptCallback = Callable[[RawTranscript], None]
 RawDiarizationCallback = Callable[[Diarization], None]
+AlignedTranscriptCallback = Callable[[AlignedTranscript], None]
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ def process_meeting_audio(
     progress_callback: ProgressCallback | None = None,
     raw_transcript_callback: RawTranscriptCallback | None = None,
     raw_diarization_callback: RawDiarizationCallback | None = None,
+    aligned_transcript_callback: AlignedTranscriptCallback | None = None,
 ) -> JobResult:
     """Run the TalkTrace pipeline for one uploaded meeting.
 
@@ -74,6 +77,8 @@ def process_meeting_audio(
         transcript=raw_transcript,
         diarization=diarization,
     )
+    if aligned_transcript_callback is not None:
+        aligned_transcript_callback(aligned_transcript)
     speaker_transcript = [
         TranscriptSegment(**segment.model_dump())
         for segment in aligned_transcript.segments
