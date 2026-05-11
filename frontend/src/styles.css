@@ -38,6 +38,16 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.secondary-button {
+  background: #eef0f4;
+  color: #18212f;
+}
+
+.secondary-button:disabled {
+  background: #eef0f4;
+  color: #9aa7b4;
+}
+
 .app-shell {
   margin: 0 auto;
   max-width: 1120px;
@@ -112,6 +122,32 @@ button:disabled {
 
 .file-picker input {
   display: none;
+}
+
+.voice-recorder {
+  border-top: 1px solid #e4e8ee;
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0;
+  padding-top: 1rem;
+}
+
+.recorder-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.recording-timer {
+  color: #677487;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.inline-error {
+  color: #8d1717;
+  margin: 0;
 }
 
 .status-grid {

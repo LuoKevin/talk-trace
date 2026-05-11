@@ -1,3 +1,5 @@
+import { VoiceRecorder } from "./VoiceRecorder";
+
 type UploadPanelProps = {
   selectedFile: File | null;
   isUploading: boolean;
@@ -26,6 +28,8 @@ export function UploadPanel({
         />
         <span>{selectedFile ? selectedFile.name : "Choose audio file"}</span>
       </label>
+
+      <VoiceRecorder disabled={isUploading} onRecordingReady={onFileChange} />
 
       <button disabled={!selectedFile || isUploading} onClick={onUpload}>
         {isUploading ? "Uploading..." : "Create job"}
