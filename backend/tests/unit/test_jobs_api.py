@@ -38,6 +38,27 @@ def test_upload_status_and_result_endpoints(isolated_storage):
     assert aligned_transcript.segments
 
 
+def test_job_artifacts_endpoint_returns_intermediate_outputs(isolated_storage):
+    client = TestClient(app)
+
+    upload_response = client.post(
+        "/api/jobs/upload",
+        files={"file": ("meeting.wav", b"fake audio", "audio/wav")},
+    )
+
+    assert upload_response.status_code == 200
+    job_id = upload_response.json()["job_id"]
+
+    artifacts_response = client.get(f"/api/jobs/{job_id}/artifacts")
+
+    assert artifacts_response.status_code == 200
+    artifacts = artifacts_response.json()
+    assert artifacts["raw_transcript"]["segments"]
+    assert artifacts["raw_diarization"]["speaker_turns"]
+    assert artifacts["aligned_transcript"]["segments"]
+    assert artifacts["result"]["job_id"] == job_id
+
+
 def test_missing_job_returns_404(isolated_storage):
     client = TestClient(app)
 

@@ -2,6 +2,10 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from app.models.alignment import AlignedTranscript
+from app.models.diarization import Diarization
+from app.models.transcription import RawTranscript
+
 
 class JobStatus(str, Enum):
     QUEUED = "queued"
@@ -31,7 +35,6 @@ class JobMetadata(BaseModel):
     updated_at: str
     error: str | None = None
 
-
 class TranscriptSegment(BaseModel):
     speaker: str
     start_seconds: float
@@ -55,3 +58,9 @@ class JobResult(BaseModel):
 class UploadResponse(BaseModel):
     job_id: str
     status: JobStatus
+
+class JobArtifacts(BaseModel):
+    raw_transcript: RawTranscript | None
+    raw_diarization: Diarization | None
+    aligned_transcript: AlignedTranscript | None
+    result: JobResult | None

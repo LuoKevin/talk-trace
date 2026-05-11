@@ -5,7 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile,
 
 from app.db.database import UPLOAD_DIR
 from app.jobs.job_runner import run_job
-from app.schemas import JobMetadata, JobResult, UploadResponse
+from app.schemas import JobArtifacts, JobMetadata, JobResult, UploadResponse
 from app.storage import job_repository
 
 
@@ -49,6 +49,23 @@ async def upload_audio(
     background_tasks.add_task(run_job, job_id)
 
     return UploadResponse(job_id=job.id, status=job.status)
+
+
+@router.get("/{job_id}/artifacts", response_model=JobArtifacts)
+def get_job_artifacts(job_id: str) -> JobArtifacts:
+    job = job_repository.get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    transcript = job_repository.get_raw_transcript(job_id)
+    diarization = job_repository.get_raw_diarization(job_id)
+    aligned = job_repository.get_aligned_transcript(job_id)
+    result = job_repository.get_result(job_id)
+    return JobArtifacts(
+        raw_transcript=transcript,
+        raw_diarization=diarization,
+        aligned_transcript=aligned,
+        result=result,
+    )
 
 
 def _validate_upload_filename(filename: str | None) -> str:
