@@ -3,6 +3,7 @@ import json
 import sqlite3
 
 from app.db.database import get_connection
+from app.models.diarization import Diarization
 from app.models.transcription import RawTranscript
 from app.schemas import JobMetadata, JobResult, JobStatus, PipelineStage
 
@@ -137,17 +138,40 @@ def save_raw_transcript(job_id: str, transcript: RawTranscript) -> None:
         )
 
 
+def save_raw_diarization(job_id: str, diarization: Diarization) -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            UPDATE jobs
+            SET raw_diarization_json = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (diarization.model_dump_json(), _now_iso(), job_id),
+        )
+
+
 def get_raw_transcript(job_id: str) -> RawTranscript | None:
     with get_connection() as connection:
         row = connection.execute(
             "SELECT raw_transcript_json FROM jobs WHERE id = ?",
             (job_id,),
         ).fetchone()
-
     if row is None or row["raw_transcript_json"] is None:
         return None
-
     return RawTranscript.model_validate(json.loads(row["raw_transcript_json"]))
+
+
+def get_raw_diarization(job_id: str) -> Diarization | None:
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT raw_diarization_json FROM jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+
+    if row is None or row["raw_diarization_json"] is None:
+        return None
+
+    return Diarization.model_validate(json.loads(row["raw_diarization_json"]))
 
 
 def get_result(job_id: str) -> JobResult | None:
