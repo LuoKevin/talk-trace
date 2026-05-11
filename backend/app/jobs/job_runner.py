@@ -48,6 +48,10 @@ def run_job(job_id: str) -> None:
                 job_id,
                 transcript,
             ),
+            raw_diarization_callback=lambda diarization: job_repository.save_raw_diarization(
+                job_id,
+                diarization,
+            ),
         )
         job_repository.save_result(job_id, result)
         logger.info("job_completed job_id=%s", job_id)

@@ -3,16 +3,18 @@ from pathlib import Path
 from typing import Callable
 
 from app.models.transcription import RawTranscript
-from app.schemas import JobResult, PipelineStage
+from app.schemas import JobResult, PipelineStage, TranscriptSegment
 from app.services.alignment_service import align_transcript_to_speakers
 from app.services.audio_service import normalize_audio
 from app.services.diarization_service import diarize_audio
 from app.services.summarization_service import summarize_meeting
 from app.services.transcription_service import transcribe_audio
+from app.models.diarization import Diarization
 
 
 ProgressCallback = Callable[[PipelineStage, int], None]
 RawTranscriptCallback = Callable[[RawTranscript], None]
+RawDiarizationCallback = Callable[[Diarization], None]
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ def process_meeting_audio(
     audio_path: Path,
     progress_callback: ProgressCallback | None = None,
     raw_transcript_callback: RawTranscriptCallback | None = None,
+    raw_diarization_callback: RawDiarizationCallback | None = None,
 ) -> JobResult:
     """Run the TalkTrace pipeline for one uploaded meeting.
 
@@ -56,6 +59,8 @@ def process_meeting_audio(
     logger.info("pipeline_stage_started job_id=%s stage=%s", job_id, PipelineStage.DIARIZATION)
     _report_progress(progress_callback, PipelineStage.DIARIZATION, 55)
     diarization = diarize_audio(normalized_audio_path)
+    if raw_diarization_callback is not None:
+        raw_diarization_callback(diarization)
     logger.info(
         "pipeline_stage_completed job_id=%s stage=%s speaker_turn_count=%s",
         job_id,
@@ -65,15 +70,19 @@ def process_meeting_audio(
 
     logger.info("pipeline_stage_started job_id=%s stage=%s", job_id, PipelineStage.ALIGNMENT)
     _report_progress(progress_callback, PipelineStage.ALIGNMENT, 75)
-    speaker_transcript = align_transcript_to_speakers(
+    aligned_transcript = align_transcript_to_speakers(
         transcript=raw_transcript,
         diarization=diarization,
     )
+    speaker_transcript = [
+        TranscriptSegment(**segment.model_dump())
+        for segment in aligned_transcript.segments
+    ]
     logger.info(
         "pipeline_stage_completed job_id=%s stage=%s aligned_segment_count=%s",
         job_id,
         PipelineStage.ALIGNMENT,
-        len(speaker_transcript),
+        len(aligned_transcript.segments),
     )
 
     logger.info("pipeline_stage_started job_id=%s stage=%s", job_id, PipelineStage.SUMMARIZATION)

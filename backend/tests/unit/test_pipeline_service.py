@@ -54,3 +54,18 @@ def test_process_meeting_audio_reports_raw_transcript(tmp_path: Path):
 
     assert len(raw_transcripts) == 1
     assert raw_transcripts[0].segments
+
+
+def test_process_meeting_audio_reports_raw_diarization(tmp_path: Path):
+    audio_path = tmp_path / "meeting.wav"
+    audio_path.write_bytes(b"fake audio")
+    raw_diarizations = []
+
+    process_meeting_audio(
+        job_id="job-123",
+        audio_path=audio_path,
+        raw_diarization_callback=raw_diarizations.append,
+    )
+
+    assert len(raw_diarizations) == 1
+    assert raw_diarizations[0].speaker_turns
