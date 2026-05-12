@@ -1,13 +1,12 @@
 from app.schemas import (
     JobResult,
     JobStatus,
-    MeetingSummary,
     PipelineStage,
-    TranscriptSegment,
 )
 from app.storage import job_repository
 from app.models.alignment import AlignedTranscript, AlignedTranscriptSegment
 from app.models.diarization import Diarization, SpeakerTurn
+from app.models.summarization import Summarization
 from app.models.transcription import RawTranscript, RawTranscriptSegment
 
 
@@ -74,19 +73,15 @@ def test_job_repository_persists_metadata_and_result(isolated_storage):
 
     result = JobResult(
         job_id="job-abc",
-        transcript=[
-            TranscriptSegment(
-                speaker="Speaker 1",
-                start_seconds=0.0,
-                end_seconds=1.0,
-                text="Hello",
-            )
-        ],
-        summary=MeetingSummary(
+        transcript=aligned_transcript,
+        summary=Summarization(
+            main_speaker="Speaker 1",
             overview="Short meeting",
             action_items=["Follow up"],
-            decisions=[],
-            unanswered_questions=[],
+            follow_up_topics=[],
+            supporter_suggestions={
+                "Speaker 1": ["Check in after the meeting."],
+            },
         ),
     )
     job_repository.save_result("job-abc", result)

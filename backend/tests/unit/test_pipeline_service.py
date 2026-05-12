@@ -11,12 +11,13 @@ def test_process_meeting_audio_returns_fake_structured_result(tmp_path: Path):
     result = process_meeting_audio(job_id="job-123", audio_path=audio_path)
 
     assert result.job_id == "job-123"
-    assert len(result.transcript) == 2
-    assert result.transcript[0].speaker == "Speaker 1"
+    assert len(result.transcript.segments) == 2
+    assert result.transcript.segments[0].speaker == "Speaker 1"
+    assert result.summary.main_speaker
     assert result.summary.overview
     assert result.summary.action_items
-    assert result.summary.decisions
-    assert result.summary.unanswered_questions
+    assert result.summary.follow_up_topics
+    assert result.summary.supporter_suggestions
 
 
 def test_process_meeting_audio_reports_stage_progress(tmp_path: Path):
@@ -85,3 +86,19 @@ def test_process_meeting_audio_reports_aligned_transcript(tmp_path: Path):
     assert len(aligned_transcripts) == 1
     assert aligned_transcripts[0].segments
     assert aligned_transcripts[0].segments[0].speaker == "Speaker 1"
+
+
+def test_process_meeting_audio_reports_summarization(tmp_path: Path):
+    audio_path = tmp_path / "meeting.wav"
+    audio_path.write_bytes(b"fake audio")
+    summaries = []
+
+    process_meeting_audio(
+        job_id="job-123",
+        audio_path=audio_path,
+        summarization_callback=summaries.append,
+    )
+
+    assert len(summaries) == 1
+    assert summaries[0].overview
+    assert summaries[0].supporter_suggestions

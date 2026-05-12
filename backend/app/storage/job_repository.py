@@ -7,6 +7,7 @@ from app.models.alignment import AlignedTranscript
 from app.models.diarization import Diarization
 from app.models.transcription import RawTranscript
 from app.schemas import JobMetadata, JobResult, JobStatus, PipelineStage
+from app.models.summarization import Summarization
 
 
 def _now_iso() -> str:
@@ -160,6 +161,17 @@ def save_aligned_transcript(job_id: str, transcript: AlignedTranscript) -> None:
             WHERE id = ?
             """,
             (transcript.model_dump_json(), _now_iso(), job_id),
+        )
+
+def save_raw_summarization(job_id: str, summarization: Summarization) -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            UPDATE jobs
+            SET raw_summarization_json = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (summarization.model_dump_json(), _now_iso(), job_id),
         )
 
 

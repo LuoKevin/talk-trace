@@ -1,10 +1,11 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.models.alignment import AlignedTranscript
 from app.models.diarization import Diarization
 from app.models.transcription import RawTranscript
+from app.models.summarization import Summarization
 
 
 class JobStatus(str, Enum):
@@ -41,18 +42,10 @@ class TranscriptSegment(BaseModel):
     end_seconds: float
     text: str
 
-
-class MeetingSummary(BaseModel):
-    overview: str
-    action_items: list[str] = Field(default_factory=list)
-    decisions: list[str] = Field(default_factory=list)
-    unanswered_questions: list[str] = Field(default_factory=list)
-
-
 class JobResult(BaseModel):
     job_id: str
-    transcript: list[TranscriptSegment]
-    summary: MeetingSummary
+    transcript: AlignedTranscript
+    summary: Summarization
 
 
 class UploadResponse(BaseModel):

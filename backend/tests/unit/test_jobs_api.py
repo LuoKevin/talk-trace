@@ -23,7 +23,8 @@ def test_upload_status_and_result_endpoints(isolated_storage):
 
     result_response = client.get(f"/api/jobs/{job_id}/result")
     assert result_response.status_code == 200
-    assert result_response.json()["transcript"][0]["speaker"] == "Speaker 1"
+    assert result_response.json()["transcript"]["segments"][0]["speaker"] == "Speaker 1"
+    assert result_response.json()["summary"]["main_speaker"] == "Speaker 1"
 
     raw_transcript = job_repository.get_raw_transcript(job_id)
     assert raw_transcript is not None
@@ -57,6 +58,7 @@ def test_job_artifacts_endpoint_returns_intermediate_outputs(isolated_storage):
     assert artifacts["raw_diarization"]["speaker_turns"]
     assert artifacts["aligned_transcript"]["segments"]
     assert artifacts["result"]["job_id"] == job_id
+    assert artifacts["result"]["summary"]["supporter_suggestions"]
 
 
 def test_missing_job_returns_404(isolated_storage):
