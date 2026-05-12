@@ -2,10 +2,12 @@ import { useState } from "react";
 
 import { uploadAudio } from "./api/client";
 import { ActionItemsDisplay } from "./components/ActionItemsDisplay";
+import { ArtifactsPanel } from "./components/ArtifactsPanel";
 import { JobStatusCard } from "./components/JobStatusCard";
 import { SummaryDisplay } from "./components/SummaryDisplay";
 import { TranscriptDisplay } from "./components/TranscriptDisplay";
 import { UploadPanel } from "./components/UploadPanel";
+import { useJobArtifacts } from "./hooks/useJobArtifacts";
 import { useJobPolling } from "./hooks/useJobPolling";
 
 export default function App() {
@@ -14,6 +16,7 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const { job, result, error: pollingError } = useJobPolling(jobId);
+  const { artifacts, error: artifactsError } = useJobArtifacts(jobId, job);
 
   async function handleUpload() {
     if (!selectedFile) return;
@@ -57,6 +60,9 @@ export default function App() {
 
       {uploadError ? <p className="error">{uploadError}</p> : null}
       {pollingError ? <p className="error">{pollingError}</p> : null}
+      {artifactsError ? <p className="error">{artifactsError}</p> : null}
+
+      {jobId ? <ArtifactsPanel artifacts={artifacts} /> : null}
 
       {result ? (
         <div className="results">

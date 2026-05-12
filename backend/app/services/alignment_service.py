@@ -3,6 +3,10 @@ from app.models.alignment import AlignedTranscript, AlignedTranscriptSegment
 from app.models.transcription import RawTranscript
 
 
+MIN_SPEAKER_OVERLAP_RATIO = 0.20
+UNKNOWN_SPEAKER = "Unknown Speaker"
+
+
 def align_transcript_to_speakers(
     transcript: RawTranscript,
     diarization: Diarization,
@@ -18,7 +22,7 @@ def align_transcript_to_speakers(
     aligned_segments: list[AlignedTranscriptSegment] = []
 
     for segment in transcript.segments:
-        speaker = _speaker_with_largest_overlap(
+        speaker, overlap_seconds, overlap_ratio = _speaker_with_largest_overlap(
             segment_start=segment.start_seconds,
             segment_end=segment.end_seconds,
             diarization=diarization,
@@ -29,6 +33,8 @@ def align_transcript_to_speakers(
                 start_seconds=segment.start_seconds,
                 end_seconds=segment.end_seconds,
                 text=segment.text,
+                overlap_seconds=overlap_seconds,
+                overlap_ratio=overlap_ratio,
             )
         )
 
@@ -39,8 +45,12 @@ def _speaker_with_largest_overlap(
     segment_start: float,
     segment_end: float,
     diarization: Diarization,
-) -> str:
-    best_speaker = "Unknown Speaker"
+) -> tuple[str, float, float]:
+    segment_duration = max(0.0, segment_end - segment_start)
+    if segment_duration == 0.0:
+        return UNKNOWN_SPEAKER, 0.0, 0.0
+
+    best_speaker = UNKNOWN_SPEAKER
     best_overlap = 0.0
 
     for turn in diarization.speaker_turns:
@@ -54,7 +64,11 @@ def _speaker_with_largest_overlap(
             best_overlap = overlap
             best_speaker = turn.speaker
 
-    return best_speaker
+    overlap_ratio = best_overlap / segment_duration
+    if overlap_ratio < MIN_SPEAKER_OVERLAP_RATIO:
+        best_speaker = UNKNOWN_SPEAKER
+
+    return best_speaker, best_overlap, overlap_ratio
 
 
 def _overlap_seconds(

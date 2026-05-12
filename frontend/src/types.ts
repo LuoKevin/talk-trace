@@ -28,6 +28,35 @@ export type TranscriptSegment = {
   text: string;
 };
 
+export type RawTranscriptSegment = {
+  start_seconds: number;
+  end_seconds: number;
+  text: string;
+};
+
+export type RawTranscript = {
+  segments: RawTranscriptSegment[];
+};
+
+export type SpeakerTurn = {
+  speaker: string;
+  start_seconds: number;
+  end_seconds: number;
+};
+
+export type Diarization = {
+  speaker_turns: SpeakerTurn[];
+};
+
+export type AlignedTranscript = {
+  segments: AlignedTranscriptSegment[];
+};
+
+export type AlignedTranscriptSegment = TranscriptSegment & {
+  overlap_seconds: number;
+  overlap_ratio: number;
+};
+
 export type MeetingSummary = {
   overview: string;
   action_items: string[];
@@ -44,4 +73,11 @@ export type JobResult = {
 export type UploadResponse = {
   job_id: string;
   status: JobStatus;
+};
+
+export type JobArtifacts = {
+  raw_transcript: RawTranscript | null;
+  raw_diarization: Diarization | null;
+  aligned_transcript: AlignedTranscript | null;
+  result: JobResult | null;
 };

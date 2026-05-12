@@ -6,6 +6,8 @@ class AlignedTranscriptSegment(BaseModel):
     start_seconds: float
     end_seconds: float
     text: str
+    overlap_seconds: float = 0.0
+    overlap_ratio: float = 0.0
 
 
 class AlignedTranscript(BaseModel):
