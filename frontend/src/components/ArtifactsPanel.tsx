@@ -25,6 +25,10 @@ export function ArtifactsPanel({ artifacts }: ArtifactsPanelProps) {
           label="Aligned transcript"
           value={countLabel(artifacts?.aligned_transcript?.segments.length, "segment")}
         />
+        <ArtifactMetric
+          label="Summarization"
+          value={artifacts?.raw_summarization ? "Ready" : "Pending"}
+        />
         <ArtifactMetric label="Result" value={artifacts?.result ? "Ready" : "Pending"} />
       </div>
 
@@ -32,6 +36,7 @@ export function ArtifactsPanel({ artifacts }: ArtifactsPanelProps) {
         <JsonArtifact title="Raw transcript" value={artifacts?.raw_transcript} />
         <JsonArtifact title="Raw diarization" value={artifacts?.raw_diarization} />
         <JsonArtifact title="Aligned transcript" value={artifacts?.aligned_transcript} />
+        <JsonArtifact title="Raw summarization" value={artifacts?.raw_summarization} />
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
-import type { TranscriptSegment } from "../types";
+import type { AlignedTranscript } from "../types";
 
 type TranscriptDisplayProps = {
-  transcript: TranscriptSegment[];
+  transcript: AlignedTranscript;
 };
 
 export function TranscriptDisplay({ transcript }: TranscriptDisplayProps) {
@@ -9,7 +9,7 @@ export function TranscriptDisplay({ transcript }: TranscriptDisplayProps) {
     <section className="panel">
       <h2>Speaker transcript</h2>
       <div className="transcript-list">
-        {transcript.map((segment, index) => (
+        {transcript.segments.map((segment, index) => (
           <article className="transcript-segment" key={`${segment.start_seconds}-${index}`}>
             <div className="segment-meta">
               <strong>{segment.speaker}</strong>

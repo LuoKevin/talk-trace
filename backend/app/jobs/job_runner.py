@@ -56,6 +56,10 @@ def run_job(job_id: str) -> None:
                 job_id,
                 transcript,
             ),
+            summarization_callback=lambda summarization: job_repository.save_raw_summarization(
+                job_id,
+                summarization,
+            ),
         )
         job_repository.save_result(job_id, result)
         logger.info("job_completed job_id=%s", job_id)

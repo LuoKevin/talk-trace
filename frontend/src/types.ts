@@ -57,17 +57,18 @@ export type AlignedTranscriptSegment = TranscriptSegment & {
   overlap_ratio: number;
 };
 
-export type MeetingSummary = {
+export type Summarization = {
+  main_speaker: string;
   overview: string;
   action_items: string[];
-  decisions: string[];
-  unanswered_questions: string[];
+  follow_up_topics: string[];
+  supporter_suggestions: Record<string, string[]>;
 };
 
 export type JobResult = {
   job_id: string;
-  transcript: TranscriptSegment[];
-  summary: MeetingSummary;
+  transcript: AlignedTranscript;
+  summary: Summarization;
 };
 
 export type UploadResponse = {
@@ -79,5 +80,6 @@ export type JobArtifacts = {
   raw_transcript: RawTranscript | null;
   raw_diarization: Diarization | null;
   aligned_transcript: AlignedTranscript | null;
+  raw_summarization: Summarization | null;
   result: JobResult | null;
 };

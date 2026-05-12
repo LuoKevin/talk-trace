@@ -69,10 +69,16 @@ export default function App() {
           <SummaryDisplay summary={result.summary} />
           <div className="grid three-column">
             <ActionItemsDisplay title="Action items" items={result.summary.action_items} />
-            <ActionItemsDisplay title="Decisions" items={result.summary.decisions} />
             <ActionItemsDisplay
-              title="Unanswered questions"
-              items={result.summary.unanswered_questions}
+              title="Follow-up topics"
+              items={result.summary.follow_up_topics}
+            />
+            <ActionItemsDisplay
+              title="Support suggestions"
+              items={Object.entries(result.summary.supporter_suggestions).flatMap(
+                ([speaker, suggestions]) =>
+                  suggestions.map((suggestion) => `${speaker}: ${suggestion}`),
+              )}
             />
           </div>
           <TranscriptDisplay transcript={result.transcript} />

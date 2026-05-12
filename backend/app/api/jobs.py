@@ -59,11 +59,13 @@ def get_job_artifacts(job_id: str) -> JobArtifacts:
     transcript = job_repository.get_raw_transcript(job_id)
     diarization = job_repository.get_raw_diarization(job_id)
     aligned = job_repository.get_aligned_transcript(job_id)
+    summarization = job_repository.get_raw_summarization(job_id)
     result = job_repository.get_result(job_id)
     return JobArtifacts(
         raw_transcript=transcript,
         raw_diarization=diarization,
         aligned_transcript=aligned,
+        raw_summarization=summarization,
         result=result,
     )
 

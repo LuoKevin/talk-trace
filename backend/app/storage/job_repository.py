@@ -163,6 +163,7 @@ def save_aligned_transcript(job_id: str, transcript: AlignedTranscript) -> None:
             (transcript.model_dump_json(), _now_iso(), job_id),
         )
 
+
 def save_raw_summarization(job_id: str, summarization: Summarization) -> None:
     with get_connection() as connection:
         connection.execute(
@@ -210,6 +211,19 @@ def get_aligned_transcript(job_id: str) -> AlignedTranscript | None:
         return None
 
     return AlignedTranscript.model_validate(json.loads(row["aligned_transcript_json"]))
+
+
+def get_raw_summarization(job_id: str) -> Summarization | None:
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT raw_summarization_json FROM jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+
+    if row is None or row["raw_summarization_json"] is None:
+        return None
+
+    return Summarization.model_validate(json.loads(row["raw_summarization_json"]))
 
 
 def get_result(job_id: str) -> JobResult | None:

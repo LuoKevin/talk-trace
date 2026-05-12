@@ -35,6 +35,7 @@ def init_db() -> None:
                 raw_transcript_json TEXT,
                 raw_diarization_json TEXT,
                 aligned_transcript_json TEXT,
+                raw_summarization_json TEXT,
                 result_json TEXT
             )
             """
@@ -67,6 +68,12 @@ def init_db() -> None:
             connection,
             table_name="jobs",
             column_name="aligned_transcript_json",
+            definition="TEXT",
+        )
+        _ensure_column(
+            connection,
+            table_name="jobs",
+            column_name="raw_summarization_json",
             definition="TEXT",
         )
 

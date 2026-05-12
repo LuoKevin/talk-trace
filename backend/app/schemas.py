@@ -56,4 +56,5 @@ class JobArtifacts(BaseModel):
     raw_transcript: RawTranscript | None
     raw_diarization: Diarization | None
     aligned_transcript: AlignedTranscript | None
+    raw_summarization: Summarization | None
     result: JobResult | None

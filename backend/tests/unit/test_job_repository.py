@@ -84,6 +84,9 @@ def test_job_repository_persists_metadata_and_result(isolated_storage):
             },
         ),
     )
+    job_repository.save_raw_summarization("job-abc", result.summary)
+    assert job_repository.get_raw_summarization("job-abc") == result.summary
+
     job_repository.save_result("job-abc", result)
 
     completed = job_repository.get_job("job-abc")

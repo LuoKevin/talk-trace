@@ -38,6 +38,10 @@ def test_upload_status_and_result_endpoints(isolated_storage):
     assert aligned_transcript is not None
     assert aligned_transcript.segments
 
+    raw_summarization = job_repository.get_raw_summarization(job_id)
+    assert raw_summarization is not None
+    assert raw_summarization.supporter_suggestions
+
 
 def test_job_artifacts_endpoint_returns_intermediate_outputs(isolated_storage):
     client = TestClient(app)
@@ -57,6 +61,7 @@ def test_job_artifacts_endpoint_returns_intermediate_outputs(isolated_storage):
     assert artifacts["raw_transcript"]["segments"]
     assert artifacts["raw_diarization"]["speaker_turns"]
     assert artifacts["aligned_transcript"]["segments"]
+    assert artifacts["raw_summarization"]["supporter_suggestions"]
     assert artifacts["result"]["job_id"] == job_id
     assert artifacts["result"]["summary"]["supporter_suggestions"]
 
