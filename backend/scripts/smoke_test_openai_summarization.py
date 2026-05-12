@@ -2,14 +2,12 @@ from pathlib import Path
 import json
 import os
 import sys
-
-
-BACKEND_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(BACKEND_ROOT))
-
 from app.adapters.summarization.openai_summarization import OpenAISummarizationAdapter
 from app.config import get_settings
 from app.models.alignment import AlignedTranscript, AlignedTranscriptSegment
+
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BACKEND_ROOT))
 
 
 def main() -> None:
