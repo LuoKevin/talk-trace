@@ -1,10 +1,17 @@
+import json
+
+from openai import OpenAI
+from pydantic import ValidationError
+
 from app.adapters.summarization.base import BaseSummarizationAdapter
+from app.adapters.summarization.prompts import SUMMARIZATION_SYSTEM_PROMPT
+from app.config import get_settings
 from app.models.alignment import AlignedTranscript
 from app.models.summarization import Summarization
-from app.config import get_settings
-from app.adapters.summarization.prompts import SUMMARIZATION_SYSTEM_PROMPT
-from openai import OpenAI
-import json
+
+
+class SummarizationAdapterError(Exception):
+    """Raised when an LLM summarization response cannot be used safely."""
 
 
 class OpenAISummarizationAdapter(BaseSummarizationAdapter):
@@ -16,20 +23,62 @@ class OpenAISummarizationAdapter(BaseSummarizationAdapter):
         self.model_id = model_id
 
     def summarize(self, transcript: AlignedTranscript) -> Summarization:
-        # Implement OpenAI summarization logic here
+        """Generate a structured summary from an aligned transcript."""
         formatted_transcript = format_aligned_transcript_for_prompt(transcript)
         messages = [
             {"role": "system", "content": SUMMARIZATION_SYSTEM_PROMPT},
             {"role": "user", "content": formatted_transcript},
         ]
-        response = self.client.chat.completions.create(
-            model=self.model_id,
-            messages=messages,
-            temperature=0.3,
-        )
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_id,
+                messages=messages,
+                temperature=0.3,
+            )
+        except Exception as exc:
+            raise SummarizationAdapterError("OpenAI summarization request failed") from exc
+
+        summary_content = _extract_summary_content(response)
+        summary_dict = _parse_summary_json(summary_content)
+        return _validate_summary(summary_dict)
+
+
+def _extract_summary_content(response) -> str:
+    try:
         summary_content = response.choices[0].message.content
-        summary_dict = json.loads(summary_content)
-        return Summarization(**summary_dict)
+    except (AttributeError, IndexError) as exc:
+        raise SummarizationAdapterError("OpenAI summarization response was empty") from exc
+
+    if summary_content is None or not summary_content.strip():
+        raise SummarizationAdapterError("OpenAI summarization response had no content")
+
+    return summary_content
+
+
+def _parse_summary_json(summary_content: str) -> dict:
+    try:
+        parsed = json.loads(summary_content)
+    except json.JSONDecodeError as exc:
+        raise SummarizationAdapterError(
+            "OpenAI summarization response was not valid JSON"
+        ) from exc
+
+    if not isinstance(parsed, dict):
+        raise SummarizationAdapterError(
+            "OpenAI summarization response JSON must be an object"
+        )
+
+    return parsed
+
+
+def _validate_summary(summary_dict: dict) -> Summarization:
+    try:
+        return Summarization.model_validate(summary_dict)
+    except ValidationError as exc:
+        raise SummarizationAdapterError(
+            "OpenAI summarization response did not match the Summarization schema"
+        ) from exc
 
 
 def format_aligned_transcript_for_prompt(transcript: AlignedTranscript) -> str:
