@@ -1,10 +1,10 @@
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.db.database import UPLOAD_DIR
-from app.jobs.job_runner import run_job
+from app.jobs import job_queue
 from app.models.alignment import AlignedTranscript
 from app.models.summarization import Summarization
 from app.schemas import (
@@ -26,7 +26,6 @@ ALLOWED_AUDIO_EXTENSIONS = {".wav", ".mp3", ".m4a", ".mp4", ".flac", ".ogg", ".w
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_audio(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ) -> UploadResponse:
     original_name = _validate_upload_filename(file.filename)
@@ -55,7 +54,7 @@ async def upload_audio(
         filename=original_name,
         audio_path=str(stored_path),
     )
-    background_tasks.add_task(run_job, job_id)
+    job_queue.enqueue(job_id)
 
     return UploadResponse(job_id=job.id, status=job.status)
 

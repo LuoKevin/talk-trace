@@ -1,7 +1,20 @@
 from fastapi.testclient import TestClient
+import pytest
 
+from app.jobs import job_runner
 from app.main import app
 from app.storage import job_repository
+
+
+@pytest.fixture(autouse=True)
+def run_enqueued_jobs_immediately(monkeypatch):
+    from app.api import jobs
+
+    monkeypatch.setattr(
+        jobs.job_queue,
+        "enqueue",
+        lambda job_id: job_runner.run_job(job_id),
+    )
 
 
 def test_upload_status_and_result_endpoints(isolated_storage):

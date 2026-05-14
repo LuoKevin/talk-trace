@@ -109,6 +109,70 @@ Questions you should be able to answer:
 - How will you compare two transcription models?
 - What summary failures are unacceptable?
 
+## Phase 6: In-Process Job Queue
+
+The current MVP uses FastAPI `BackgroundTasks`, which starts processing after the
+upload response is sent but still runs inside the API process. That is fine for
+one local demo job, but heavy model work can block resources when multiple jobs
+arrive at the same time.
+
+Implementation tasks:
+
+- Add `backend/app/jobs/job_queue.py`.
+- Replace direct `background_tasks.add_task(run_job, job_id)` with
+  `job_queue.enqueue(job_id)`.
+- Keep a single worker loop that processes one job at a time.
+- Store queued jobs in an in-memory `queue.Queue`.
+- Start the worker during FastAPI lifespan startup.
+- Mark jobs as `queued` when created, `processing` when the worker picks them up,
+  and `completed` or `failed` when `run_job` finishes.
+- Add tests that enqueue multiple jobs and verify they are processed in order.
+- Add a visible queue position or queued count later if the frontend needs it.
+
+How the queue works:
+
+```text
+POST /api/jobs/upload
+  -> save audio file
+  -> create SQLite job row with status=queued
+  -> push job_id into in-memory queue
+  -> return job_id immediately
+
+Worker loop
+  -> wait for next job_id
+  -> call run_job(job_id)
+  -> run transcription, diarization, alignment, summarization
+  -> persist artifacts and result
+  -> wait for next job_id
+```
+
+The first version should use one worker thread:
+
+```text
+max_concurrent_jobs = 1
+```
+
+That keeps local CPU/GPU memory usage predictable. It also teaches the core queue
+idea without adding Redis, Celery, or RQ yet.
+
+Questions you should be able to answer:
+
+- What happens if three users upload audio at the same time?
+- Why is a queue safer than launching every job immediately?
+- What happens to queued jobs if the API process restarts?
+- Why is an in-memory queue not enough for production?
+- How would Redis/RQ or Celery replace this queue later?
+
+Future production version:
+
+```text
+FastAPI
+  -> Redis queue
+  -> worker process
+  -> Postgres job state
+  -> object storage for audio/artifacts
+```
+
 ## Personal Study Loop
 
 For each phase:
