@@ -1,9 +1,11 @@
 import { useState } from "react";
 
-import { uploadAudio } from "./api/client";
+import { updateSpeakerLabels, uploadAudio } from "./api/client";
 import { ActionItemsDisplay } from "./components/ActionItemsDisplay";
+import { AudioPreviewPanel } from "./components/AudioPreviewPanel";
 import { ArtifactsPanel } from "./components/ArtifactsPanel";
 import { JobStatusCard } from "./components/JobStatusCard";
+import { SpeakerLabelsPanel } from "./components/SpeakerLabelsPanel";
 import { SummaryDisplay } from "./components/SummaryDisplay";
 import { TranscriptDisplay } from "./components/TranscriptDisplay";
 import { UploadPanel } from "./components/UploadPanel";
@@ -14,9 +16,12 @@ export default function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSavingSpeakerLabels, setIsSavingSpeakerLabels] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const { job, result, error: pollingError } = useJobPolling(jobId);
-  const { artifacts, error: artifactsError } = useJobArtifacts(jobId, job);
+  const [speakerLabelError, setSpeakerLabelError] = useState<string | null>(null);
+  const { job, result, error: pollingError } = useJobPolling(jobId, refreshKey);
+  const { artifacts, error: artifactsError } = useJobArtifacts(jobId, job, refreshKey);
 
   async function handleUpload() {
     if (!selectedFile) return;
@@ -32,6 +37,24 @@ export default function App() {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setIsUploading(false);
+    }
+  }
+
+  async function handleSaveSpeakerLabels(speakerLabels: Record<string, string>) {
+    if (!jobId) return;
+
+    setIsSavingSpeakerLabels(true);
+    setSpeakerLabelError(null);
+
+    try {
+      await updateSpeakerLabels(jobId, speakerLabels);
+      setRefreshKey((current) => current + 1);
+    } catch (err) {
+      setSpeakerLabelError(
+        err instanceof Error ? err.message : "Could not save speaker names",
+      );
+    } finally {
+      setIsSavingSpeakerLabels(false);
     }
   }
 
@@ -58,11 +81,22 @@ export default function App() {
         <JobStatusCard job={job} />
       </div>
 
+      <AudioPreviewPanel file={selectedFile} />
+
       {uploadError ? <p className="error">{uploadError}</p> : null}
       {pollingError ? <p className="error">{pollingError}</p> : null}
       {artifactsError ? <p className="error">{artifactsError}</p> : null}
+      {speakerLabelError ? <p className="error">{speakerLabelError}</p> : null}
 
       {jobId ? <ArtifactsPanel artifacts={artifacts} /> : null}
+      {jobId ? (
+        <SpeakerLabelsPanel
+          transcript={artifacts?.aligned_transcript ?? null}
+          speakerLabels={artifacts?.speaker_labels ?? {}}
+          isSaving={isSavingSpeakerLabels}
+          onSave={handleSaveSpeakerLabels}
+        />
+      ) : null}
 
       {result ? (
         <div className="results">

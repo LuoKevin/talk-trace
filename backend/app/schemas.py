@@ -52,9 +52,19 @@ class UploadResponse(BaseModel):
     job_id: str
     status: JobStatus
 
+
+class SpeakerLabelsUpdate(BaseModel):
+    speaker_labels: dict[str, str]
+
+
+class SpeakerLabelsResponse(BaseModel):
+    speaker_labels: dict[str, str]
+
+
 class JobArtifacts(BaseModel):
     raw_transcript: RawTranscript | None
     raw_diarization: Diarization | None
     aligned_transcript: AlignedTranscript | None
     raw_summarization: Summarization | None
+    speaker_labels: dict[str, str]
     result: JobResult | None

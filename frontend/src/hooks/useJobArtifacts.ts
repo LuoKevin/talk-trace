@@ -11,6 +11,7 @@ type ArtifactState = {
 export function useJobArtifacts(
   jobId: string | null,
   job: JobMetadata | null,
+  refreshKey = 0,
 ): ArtifactState {
   const [artifacts, setArtifacts] = useState<JobArtifacts | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function useJobArtifacts(
       isActive = false;
       window.clearInterval(intervalId);
     };
-  }, [jobId, job?.status]);
+  }, [jobId, job?.status, refreshKey]);
 
   return { artifacts, error };
 }

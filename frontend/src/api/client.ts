@@ -1,4 +1,10 @@
-import type { JobArtifacts, JobMetadata, JobResult, UploadResponse } from "../types";
+import type {
+  JobArtifacts,
+  JobMetadata,
+  JobResult,
+  SpeakerLabelsResponse,
+  UploadResponse,
+} from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -36,4 +42,19 @@ export async function fetchJobResult(jobId: string): Promise<JobResult> {
 export async function fetchJobArtifacts(jobId: string): Promise<JobArtifacts> {
   const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/artifacts`);
   return parseResponse<JobArtifacts>(response);
+}
+
+export async function updateSpeakerLabels(
+  jobId: string,
+  speakerLabels: Record<string, string>,
+): Promise<SpeakerLabelsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}/speaker-labels`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ speaker_labels: speakerLabels }),
+  });
+
+  return parseResponse<SpeakerLabelsResponse>(response);
 }

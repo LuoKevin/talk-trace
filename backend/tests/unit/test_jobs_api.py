@@ -66,6 +66,50 @@ def test_job_artifacts_endpoint_returns_intermediate_outputs(isolated_storage):
     assert artifacts["result"]["summary"]["supporter_suggestions"]
 
 
+def test_speaker_labels_endpoint_updates_result_display_names(isolated_storage):
+    client = TestClient(app)
+
+    upload_response = client.post(
+        "/api/jobs/upload",
+        files={"file": ("meeting.wav", b"fake audio", "audio/wav")},
+    )
+
+    assert upload_response.status_code == 200
+    job_id = upload_response.json()["job_id"]
+
+    label_response = client.put(
+        f"/api/jobs/{job_id}/speaker-labels",
+        json={"speaker_labels": {"Speaker 1": "Kevin", " ": "Ignored"}},
+    )
+
+    assert label_response.status_code == 200
+    assert label_response.json()["speaker_labels"] == {"Speaker 1": "Kevin"}
+
+    result_response = client.get(f"/api/jobs/{job_id}/result")
+    assert result_response.status_code == 200
+    result = result_response.json()
+    assert result["transcript"]["segments"][0]["speaker"] == "Kevin"
+    assert result["summary"]["main_speaker"] == "Kevin"
+    assert "Kevin" in result["summary"]["supporter_suggestions"]
+
+    artifacts_response = client.get(f"/api/jobs/{job_id}/artifacts")
+    assert artifacts_response.status_code == 200
+    artifacts = artifacts_response.json()
+    assert artifacts["speaker_labels"] == {"Speaker 1": "Kevin"}
+    assert artifacts["aligned_transcript"]["segments"][0]["speaker"] == "Speaker 1"
+
+
+def test_speaker_labels_endpoint_returns_404_for_missing_job(isolated_storage):
+    client = TestClient(app)
+
+    response = client.put(
+        "/api/jobs/not-a-real-job/speaker-labels",
+        json={"speaker_labels": {"Speaker 1": "Kevin"}},
+    )
+
+    assert response.status_code == 404
+
+
 def test_missing_job_returns_404(isolated_storage):
     client = TestClient(app)
 

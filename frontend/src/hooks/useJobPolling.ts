@@ -9,7 +9,7 @@ type PollingState = {
   error: string | null;
 };
 
-export function useJobPolling(jobId: string | null): PollingState {
+export function useJobPolling(jobId: string | null, refreshKey = 0): PollingState {
   const [job, setJob] = useState<JobMetadata | null>(null);
   const [result, setResult] = useState<JobResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export function useJobPolling(jobId: string | null): PollingState {
       isActive = false;
       window.clearInterval(intervalId);
     };
-  }, [jobId]);
+  }, [jobId, refreshKey]);
 
   return { job, result, error };
 }

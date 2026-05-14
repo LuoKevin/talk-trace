@@ -5,7 +5,16 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile,
 
 from app.db.database import UPLOAD_DIR
 from app.jobs.job_runner import run_job
-from app.schemas import JobArtifacts, JobMetadata, JobResult, UploadResponse
+from app.models.alignment import AlignedTranscript
+from app.models.summarization import Summarization
+from app.schemas import (
+    JobArtifacts,
+    JobMetadata,
+    JobResult,
+    SpeakerLabelsResponse,
+    SpeakerLabelsUpdate,
+    UploadResponse,
+)
 from app.storage import job_repository
 
 
@@ -60,12 +69,14 @@ def get_job_artifacts(job_id: str) -> JobArtifacts:
     diarization = job_repository.get_raw_diarization(job_id)
     aligned = job_repository.get_aligned_transcript(job_id)
     summarization = job_repository.get_raw_summarization(job_id)
+    speaker_labels = job_repository.get_speaker_labels(job_id)
     result = job_repository.get_result(job_id)
     return JobArtifacts(
         raw_transcript=transcript,
         raw_diarization=diarization,
         aligned_transcript=aligned,
         raw_summarization=summarization,
+        speaker_labels=speaker_labels,
         result=result,
     )
 
@@ -120,4 +131,85 @@ def get_job_result(job_id: str) -> JobResult:
     if result is None:
         raise HTTPException(status_code=409, detail="Job result is not ready")
 
-    return result
+    return _apply_speaker_labels_to_result(
+        result,
+        job_repository.get_speaker_labels(job_id),
+    )
+
+
+@router.put("/{job_id}/speaker-labels", response_model=SpeakerLabelsResponse)
+def update_speaker_labels(
+    job_id: str,
+    payload: SpeakerLabelsUpdate,
+) -> SpeakerLabelsResponse:
+    job = job_repository.get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    speaker_labels = _clean_speaker_labels(payload.speaker_labels)
+    job_repository.save_speaker_labels(job_id, speaker_labels)
+    return SpeakerLabelsResponse(speaker_labels=speaker_labels)
+
+
+def _clean_speaker_labels(speaker_labels: dict[str, str]) -> dict[str, str]:
+    cleaned = {
+        original.strip(): label.strip()
+        for original, label in speaker_labels.items()
+        if original.strip() and label.strip()
+    }
+    return cleaned
+
+
+def _apply_speaker_labels_to_result(
+    result: JobResult,
+    speaker_labels: dict[str, str],
+) -> JobResult:
+    if not speaker_labels:
+        return result
+
+    return result.model_copy(
+        update={
+            "transcript": _apply_speaker_labels_to_transcript(
+                result.transcript,
+                speaker_labels,
+            ),
+            "summary": _apply_speaker_labels_to_summary(
+                result.summary,
+                speaker_labels,
+            ),
+        },
+        deep=True,
+    )
+
+
+def _apply_speaker_labels_to_transcript(
+    transcript: AlignedTranscript,
+    speaker_labels: dict[str, str],
+) -> AlignedTranscript:
+    return transcript.model_copy(
+        update={
+            "segments": [
+                segment.model_copy(
+                    update={"speaker": speaker_labels.get(segment.speaker, segment.speaker)}
+                )
+                for segment in transcript.segments
+            ]
+        },
+        deep=True,
+    )
+
+
+def _apply_speaker_labels_to_summary(
+    summary: Summarization,
+    speaker_labels: dict[str, str],
+) -> Summarization:
+    return summary.model_copy(
+        update={
+            "main_speaker": speaker_labels.get(summary.main_speaker, summary.main_speaker),
+            "supporter_suggestions": {
+                speaker_labels.get(speaker, speaker): suggestions
+                for speaker, suggestions in summary.supporter_suggestions.items()
+            },
+        },
+        deep=True,
+    )

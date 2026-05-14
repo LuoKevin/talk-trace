@@ -176,6 +176,18 @@ def save_raw_summarization(job_id: str, summarization: Summarization) -> None:
         )
 
 
+def save_speaker_labels(job_id: str, speaker_labels: dict[str, str]) -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            UPDATE jobs
+            SET speaker_labels_json = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (json.dumps(speaker_labels), _now_iso(), job_id),
+        )
+
+
 def get_raw_transcript(job_id: str) -> RawTranscript | None:
     with get_connection() as connection:
         row = connection.execute(
@@ -224,6 +236,23 @@ def get_raw_summarization(job_id: str) -> Summarization | None:
         return None
 
     return Summarization.model_validate(json.loads(row["raw_summarization_json"]))
+
+
+def get_speaker_labels(job_id: str) -> dict[str, str]:
+    with get_connection() as connection:
+        row = connection.execute(
+            "SELECT speaker_labels_json FROM jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+
+    if row is None or row["speaker_labels_json"] is None:
+        return {}
+
+    labels = json.loads(row["speaker_labels_json"])
+    if not isinstance(labels, dict):
+        return {}
+
+    return {str(key): str(value) for key, value in labels.items()}
 
 
 def get_result(job_id: str) -> JobResult | None:

@@ -81,5 +81,10 @@ export type JobArtifacts = {
   raw_diarization: Diarization | null;
   aligned_transcript: AlignedTranscript | null;
   raw_summarization: Summarization | null;
+  speaker_labels: Record<string, string>;
   result: JobResult | null;
+};
+
+export type SpeakerLabelsResponse = {
+  speaker_labels: Record<string, string>;
 };
